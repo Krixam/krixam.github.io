@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stat Training Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0D0F14;
+    --surface: #141720;
+    --surface2: #1C2030;
+    --border: #252A3A;
+    --accent: #6C63FF;
+    --accent2: #00E5FF;
+    --accent3: #FF6584;
+    --gold: #F5C842;
+    --text: #E2E8F0;
+    --muted: #6B7280;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+  }
+
+  header { text-align: center; margin-bottom: 28px; }
+
+  .title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(26px, 6vw, 46px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: linear-gradient(120deg, var(--accent2) 0%, var(--accent) 50%, var(--accent3) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  /* ── TABS ── */
+  .tab-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 10px 8px;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+
+  .tab-btn.active-stats {
+    background: rgba(108,99,255,0.18);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  .tab-btn.active-yens {
+    background: rgba(245,200,66,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title.gold { color: var(--gold); }
+  .card-title.gold::before { background: var(--gold); }
+
+  .card-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 13px;
+    background: var(--accent2);
+    border-radius: 2px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  @media (max-width: 500px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(108,99,255,0.15);
+  }
+
+  .input-gold:focus {
+    border-color: var(--gold) !important;
+    box-shadow: 0 0 0 3px rgba(245,200,66,0.12) !important;
+  }
+
+  /* ── STAT SELECTOR ── */
+  .stat-selector {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 460px) { .stat-selector { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 10px 8px;
+    text-align: center;
+    transition: all 0.18s;
+  }
+
+  .stat-btn:hover { border-color: var(--accent); color: var(--text); }
+  .stat-btn.active {
+    background: rgba(108,99,255,0.18);
+    border-color: var(--accent);
+    color: var(--accent2);
+    box-shadow: 0 0 12px rgba(108,99,255,0.18);
+  }
+
+  /* ── TOGGLE ── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.2s;
+  }
+  .toggle-row:hover { border-color: var(--accent); }
+
+  .toggle {
+    width: 36px; height: 20px;
+    background: var(--border);
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    background: white;
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+  }
+  .toggle.on::after { transform: translateX(16px); }
+  .toggle-label { font-size: 13px; color: var(--text); }
+
+  /* ── CHAMPION SECTION ── */
+  .champion-section {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease, opacity 0.3s;
+    opacity: 0;
+  }
+  .champion-section.open { max-height: 400px; opacity: 1; }
+  .champion-inner { padding-top: 14px; }
+
+  /* ── RADIO ── */
+  .radio-group { display: flex; gap: 8px; margin-bottom: 12px; }
+  .radio-btn {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding: 8px 6px;
+    text-align: center;
+    transition: all 0.18s;
+    text-transform: uppercase;
+  }
+  .radio-btn.active {
+    background: rgba(108,99,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent2);
+  }
+
+  /* ── BUTTONS ── */
+  .btn-calc {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent) 0%, #5A52E8 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    padding: 14px;
+    text-transform: uppercase;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 4px;
+  }
+  .btn-calc.gold-btn {
+    background: linear-gradient(135deg, #C9A227 0%, var(--gold) 100%);
+  }
+  .btn-calc:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-calc:active { transform: translateY(0); }
+
+  /* ── RESULTS SHARED ── */
+  .results { display: none; animation: fadeUp 0.35s ease; }
+  .results.show { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-main {
+    text-align: center;
+    padding: 26px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-main::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .result-main.gold-top::before {
+    background: linear-gradient(90deg, #C9A227, var(--gold));
+  }
+
+  .result-time {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(28px, 7vw, 48px);
+    font-weight: 700;
+    color: var(--accent2);
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
+  .result-time.gold-color { color: var(--gold); }
+
+  .result-time-label {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .progress-wrap {
+    margin-top: 18px;
+    background: var(--surface2);
+    border-radius: 6px;
+    height: 5px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 6px;
+    width: 0%;
+    transition: width 1s cubic-bezier(0.4,0,0.2,1);
+  }
+  .progress-bar.gold-bar {
+    background: linear-gradient(90deg, #C9A227, var(--gold));
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 11px;
+    margin-bottom: 12px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+  }
+  .stat-box-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--accent2);
+    line-height: 1.2;
+  }
+  .stat-box-value.gold-color { color: var(--gold); }
+  .stat-box-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 15px;
+  }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-key { color: var(--muted); }
+  .breakdown-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .error-msg {
+    color: var(--accent3);
+    font-size: 11px;
+    margin-top: 5px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+  .hidden { display: none !important; }
+
+  .yen-symbol {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    color: var(--gold);
+    margin-right: 4px;
+    opacity: 0.8;
+  }
+
+  .note {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">Training Calculator</div>
+  <div class="subtitle">Stat progression · Yens · Champion support</div>
+</header>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <div class="tab-btn active-stats" data-tab="stats">⚔ Stats</div>
+  <div class="tab-btn" data-tab="yens">¥ Yens</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TAB : STATS
+     ══════════════════════════════════════════════ -->
+<div class="tab-panel active" id="panel-stats">
+
+  <div class="card">
+    <div class="card-title">Statistique</div>
+    <div class="stat-selector">
+      <div class="stat-btn active" data-stat="STR">STR</div>
+      <div class="stat-btn" data-stat="CHA">CHA</div>
+      <div class="stat-btn" data-stat="DUR">DUR</div>
+      <div class="stat-btn" data-stat="SWORD">SWORD</div>
+    </div>
+
+    <div id="dur-options" class="hidden" style="margin-top:14px;">
+      <label>Mode Durabilité</label>
+      <div class="radio-group">
+        <div class="radio-btn active" data-dur="sword">Sword équipée (30/min)</div>
+        <div class="radio-btn" data-dur="normal">Normal (58/min)</div>
+        <div class="radio-btn" data-dur="auto">Autoclick (60/min)</div>
+      </div>
+    </div>
+
+    <div id="autoclick-option" style="margin-top:14px;">
+      <div class="toggle-row" id="autoclick-toggle">
+        <div class="toggle" id="autoclick-knob"></div>
+        <span class="toggle-label">Autoclick activé</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Valeurs</div>
+    <div class="grid-2">
+      <div>
+        <label>Valeur actuelle</label>
+        <input type="text" id="current-val" placeholder="ex: 1.5B" />
+        <div class="error-msg" id="err-current">Valeur invalide</div>
+      </div>
+      <div>
+        <label>Objectif</label>
+        <input type="text" id="target-val" placeholder="ex: 10T" />
+        <div class="error-msg" id="err-target">Valeur invalide</div>
+      </div>
+    </div>
+    <div style="margin-top:13px;">
+      <label>Gain par tick (1 incrément)</label>
+      <input type="text" id="tick-gain" placeholder="ex: 500K ou 1.2B" />
+      <div class="error-msg" id="err-tick">Valeur invalide</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Champion</div>
+    <div class="toggle-row" id="champ-toggle">
+      <div class="toggle" id="champ-knob"></div>
+      <span class="toggle-label">Champion équipé</span>
+    </div>
+    <div class="champion-section" id="champ-section">
+      <div class="champion-inner">
+        <label>Mode de saisie du champion</label>
+        <div class="radio-group">
+          <div class="radio-btn active" data-mode="pct">Pourcentage (%)</div>
+          <div class="radio-btn" data-mode="val">Valeur directe</div>
+        </div>
+        <div id="champ-pct-input">
+          <label>% entraîné par le champion</label>
+          <input type="number" id="champ-pct" placeholder="ex: 50" min="0" max="100" step="0.1" />
+          <div class="note">Le champion effectue 12 ticks/min de cette stat.</div>
+        </div>
+        <div id="champ-val-input" class="hidden">
+          <label>Gain par tick du champion</label>
+          <input type="text" id="champ-val" placeholder="ex: 250K" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-calc" id="calc-btn">⟶ Calculer</button>
+
+  <div class="results" id="results" style="margin-top:18px;">
+    <div class="result-main">
+      <div class="result-time" id="res-time">—</div>
+      <div class="result-time-label">Temps estimé (jours · heures · minutes)</div>
+      <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-box-value" id="res-24h">—</div>
+        <div class="stat-box-label">Gain en 24h</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="res-tpm">—</div>
+        <div class="stat-box-label">Ticks / minute</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="res-per-tick">—</div>
+        <div class="stat-box-label">Gain / tick total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="res-remaining">—</div>
+        <div class="stat-box-label">Stats restantes</div>
+      </div>
+    </div>
+    <div class="breakdown">
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain joueur / tick</span>
+        <span class="breakdown-val" id="br-player">—</span>
+      </div>
+      <div class="breakdown-row" id="br-champ-row">
+        <span class="breakdown-key">Gain champion / tick</span>
+        <span class="breakdown-val" id="br-champ">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Ticks / minute</span>
+        <span class="breakdown-val" id="br-tpm">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / minute</span>
+        <span class="breakdown-val" id="br-gpm">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / heure</span>
+        <span class="breakdown-val" id="br-gph">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TAB : YENS
+     ══════════════════════════════════════════════ -->
+<div class="tab-panel" id="panel-yens">
+
+  <div class="card">
+    <div class="card-title gold">Revenus</div>
+    <div>
+      <label>¥ Yens par minute</label>
+      <input type="text" id="yen-rate" placeholder="ex: 500K ou 2.5B" class="input-gold" />
+      <div class="error-msg" id="err-yen-rate">Valeur invalide</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title gold">Objectif</div>
+    <div class="grid-2">
+      <div>
+        <label>Yens actuels</label>
+        <input type="text" id="yen-current" placeholder="ex: 10B" class="input-gold" />
+        <div class="error-msg" id="err-yen-current">Valeur invalide</div>
+      </div>
+      <div>
+        <label>Yens visés</label>
+        <input type="text" id="yen-target" placeholder="ex: 1T" class="input-gold" />
+        <div class="error-msg" id="err-yen-target">Valeur invalide</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-calc gold-btn" id="yen-calc-btn">⟶ Calculer</button>
+
+  <div class="results" id="yen-results" style="margin-top:18px;">
+    <div class="result-main gold-top">
+      <div style="font-size:12px;letter-spacing:0.15em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Temps pour atteindre l'objectif</div>
+      <div class="result-time gold-color" id="yen-res-time">—</div>
+      <div class="result-time-label">jours · heures · minutes</div>
+      <div class="progress-wrap" style="margin-top:16px;">
+        <div class="progress-bar gold-bar" id="yen-progress-bar"></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-box-value gold-color" id="yen-res-hour">—</div>
+        <div class="stat-box-label">¥ par heure</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value gold-color" id="yen-res-day">—</div>
+        <div class="stat-box-label">¥ par 24h</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value gold-color" id="yen-res-remaining">—</div>
+        <div class="stat-box-label">¥ restants</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value gold-color" id="yen-res-rate">—</div>
+        <div class="stat-box-label">¥ par minute</div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / minute</span>
+        <span class="breakdown-val" id="yen-br-min">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / heure</span>
+        <span class="breakdown-val" id="yen-br-hour">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / jour</span>
+        <span class="breakdown-val" id="yen-br-day">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Yens restants</span>
+        <span class="breakdown-val" id="yen-br-remaining">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Minutes nécessaires</span>
+        <span class="breakdown-val" id="yen-br-minutes">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Suffix system ──────────────────────────────────────────────
+const SUFFIX_MAP = {
+  'K': 1e3, 'M': 1e6, 'B': 1e9, 'T': 1e12,
+  'QD': 1e15, 'QN': 1e18,
+  'SX': 1e21, 'SP': 1e24,
+  'OC': 1e27, 'N': 1e30,
+};
+
+const SUFFIX_ORDER = [
+  ['', 1], ['K', 1e3], ['M', 1e6], ['B', 1e9], ['T', 1e12],
+  ['QD', 1e15], ['QN', 1e18], ['SX', 1e21],
+  ['SP', 1e24], ['OC', 1e27], ['N', 1e30],
+];
+
+function parseVal(str) {
+  if (!str) return null;
+  str = str.trim().toUpperCase().replace(',', '.');
+  const m = str.match(/^(\d+(?:\.\d+)?)(K|M|B|T|QD|QN|SX|SP|OC|N)?$/);
+  if (!m) return null;
+  const num = parseFloat(m[1]);
+  const mult = m[2] ? SUFFIX_MAP[m[2]] : 1;
+  if (mult === undefined) return null;
+  return num * mult;
+}
+
+function formatVal(v) {
+  if (v === 0) return '0';
+  for (let i = SUFFIX_ORDER.length - 1; i >= 0; i--) {
+    const [s, mult] = SUFFIX_ORDER[i];
+    if (v >= mult) {
+      const n = v / mult;
+      const str = n >= 100 ? n.toFixed(1) : n >= 10 ? n.toFixed(2) : n.toFixed(3);
+      return str.replace(/\.?0+$/, '') + s;
+    }
+  }
+  return Math.round(v).toLocaleString('fr-FR');
+}
+
+function formatTime(minutes) {
+  minutes = Math.ceil(minutes);
+  const d = Math.floor(minutes / 1440);
+  const h = Math.floor((minutes % 1440) / 60);
+  const m = minutes % 60;
+  return `${d}j ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`;
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+const tabBtns = document.querySelectorAll('.tab-btn');
+const tabPanels = document.querySelectorAll('.tab-panel');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.tab;
+    tabBtns.forEach(b => b.classList.remove('active-stats','active-yens'));
+    btn.classList.add(t === 'stats' ? 'active-stats' : 'active-yens');
+    tabPanels.forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + t).classList.add('active');
+  });
+});
+
+// ── STATS STATE ───────────────────────────────────────────────
+let currentStat = 'STR';
+let durMode = 'sword';
+let autoclickOn = false;
+let champOn = false;
+let champMode = 'pct';
+
+function getTPM() {
+  if (currentStat === 'STR')   return autoclickOn ? 60 : 55;
+  if (currentStat === 'CHA')   return 60;
+  if (currentStat === 'DUR') {
+    if (durMode === 'sword') return 30;
+    if (durMode === 'auto')  return 60;
+    return 58;
+  }
+  if (currentStat === 'SWORD') return autoclickOn ? 75 : 70;
+  return 60;
+}
+
+document.querySelectorAll('.stat-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.stat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentStat = btn.dataset.stat;
+    document.getElementById('dur-options').classList.toggle('hidden', currentStat !== 'DUR');
+    document.getElementById('autoclick-option').classList.toggle('hidden', currentStat === 'CHA' || currentStat === 'DUR');
+  });
+});
+
+document.querySelectorAll('[data-dur]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-dur]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    durMode = btn.dataset.dur;
+  });
+});
+
+document.getElementById('autoclick-toggle').addEventListener('click', () => {
+  autoclickOn = !autoclickOn;
+  document.getElementById('autoclick-knob').classList.toggle('on', autoclickOn);
+});
+
+document.getElementById('champ-toggle').addEventListener('click', () => {
+  champOn = !champOn;
+  document.getElementById('champ-knob').classList.toggle('on', champOn);
+  document.getElementById('champ-section').classList.toggle('open', champOn);
+});
+
+document.querySelectorAll('[data-mode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    champMode = btn.dataset.mode;
+    document.getElementById('champ-pct-input').classList.toggle('hidden', champMode !== 'pct');
+    document.getElementById('champ-val-input').classList.toggle('hidden', champMode !== 'val');
+  });
+});
+
+// ── STATS CALCULATE ───────────────────────────────────────────
+function vld(id, errId) {
+  const v = parseVal(document.getElementById(id).value);
+  document.getElementById(errId).classList.toggle('show', v === null);
+  return v;
+}
+
+document.getElementById('calc-btn').addEventListener('click', () => {
+  const current  = vld('current-val', 'err-current');
+  const target   = vld('target-val', 'err-target');
+  const tickGain = vld('tick-gain', 'err-tick');
+  if (current === null || target === null || tickGain === null) return;
+
+  if (target <= current) {
+    const el = document.getElementById('err-target');
+    el.textContent = 'L\'objectif doit dépasser la valeur actuelle.';
+    el.classList.add('show');
+    return;
+  }
+  document.getElementById('err-target').classList.remove('show');
+
+  const tpm = getTPM();
+  const champTPM = 12;
+  let champPerTick = 0;
+
+  if (champOn) {
+    if (champMode === 'pct') {
+      const pct = parseFloat(document.getElementById('champ-pct').value);
+      if (isNaN(pct) || pct < 0 || pct > 100) { alert('Pourcentage invalide.'); return; }
+      champPerTick = tickGain * (pct / 100);
+    } else {
+      const cv = parseVal(document.getElementById('champ-val').value);
+      if (cv === null) { alert('Valeur champion invalide.'); return; }
+      champPerTick = cv;
+    }
+  }
+
+  const playerGPM = tickGain * tpm;
+  const champGPM  = champOn ? champPerTick * champTPM : 0;
+  const totalGPM  = playerGPM + champGPM;
+  const remaining = target - current;
+  const mins      = remaining / totalGPM;
+  const gain24h   = totalGPM * 1440;
+
+  document.getElementById('res-time').textContent      = formatTime(mins);
+  document.getElementById('res-24h').textContent       = formatVal(gain24h);
+  document.getElementById('res-tpm').textContent       = tpm + (champOn ? ` + ${champTPM}` : '');
+  document.getElementById('res-per-tick').textContent  = formatVal(tickGain + champPerTick);
+  document.getElementById('res-remaining').textContent = formatVal(remaining);
+  document.getElementById('br-player').textContent     = formatVal(tickGain);
+  document.getElementById('br-champ').textContent      = champOn ? formatVal(champPerTick) : '—';
+  document.getElementById('br-champ-row').style.opacity = champOn ? '1' : '0.3';
+  document.getElementById('br-tpm').textContent        = tpm + (champOn ? ` + ${champTPM}` : '');
+  document.getElementById('br-gpm').textContent        = formatVal(totalGPM) + '/min';
+  document.getElementById('br-gph').textContent        = formatVal(totalGPM * 60) + '/h';
+
+  const res = document.getElementById('results');
+  res.classList.add('show');
+  setTimeout(() => {
+    document.getElementById('progress-bar').style.width =
+      Math.min(100, (current / target) * 100) + '%';
+  }, 100);
+  res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+// ── YENS CALCULATE ────────────────────────────────────────────
+document.getElementById('yen-calc-btn').addEventListener('click', () => {
+  const rate    = parseVal(document.getElementById('yen-rate').value);
+  const current = parseVal(document.getElementById('yen-current').value);
+  const target  = parseVal(document.getElementById('yen-target').value);
+
+  document.getElementById('err-yen-rate').classList.toggle('show', rate === null);
+  document.getElementById('err-yen-current').classList.toggle('show', current === null);
+  document.getElementById('err-yen-target').classList.toggle('show', target === null);
+  if (rate === null || current === null || target === null) return;
+
+  if (target <= current) {
+    const el = document.getElementById('err-yen-target');
+    el.textContent = 'L\'objectif doit dépasser les Yens actuels.';
+    el.classList.add('show');
+    return;
+  }
+  document.getElementById('err-yen-target').classList.remove('show');
+
+  const remaining  = target - current;
+  const minsNeeded = remaining / rate;
+  const perHour    = rate * 60;
+  const perDay     = rate * 1440;
+
+  document.getElementById('yen-res-time').textContent      = formatTime(minsNeeded);
+  document.getElementById('yen-res-hour').textContent      = '¥ ' + formatVal(perHour);
+  document.getElementById('yen-res-day').textContent       = '¥ ' + formatVal(perDay);
+  document.getElementById('yen-res-remaining').textContent = '¥ ' + formatVal(remaining);
+  document.getElementById('yen-res-rate').textContent      = '¥ ' + formatVal(rate);
+
+  document.getElementById('yen-br-min').textContent       = '¥ ' + formatVal(rate) + '/min';
+  document.getElementById('yen-br-hour').textContent      = '¥ ' + formatVal(perHour) + '/h';
+  document.getElementById('yen-br-day').textContent       = '¥ ' + formatVal(perDay) + '/j';
+  document.getElementById('yen-br-remaining').textContent = '¥ ' + formatVal(remaining);
+  document.getElementById('yen-br-minutes').textContent   = Math.ceil(minsNeeded).toLocaleString('fr-FR') + ' min';
+
+  const res = document.getElementById('yen-results');
+  res.classList.add('show');
+  setTimeout(() => {
+    document.getElementById('yen-progress-bar').style.width =
+      Math.min(100, (current / target) * 100) + '%';
+  }, 100);
+  res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+</script>
+</body>
+</html>
