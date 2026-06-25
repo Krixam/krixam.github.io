@@ -18,6 +18,7 @@
     --accent2: #00E5FF;
     --accent3: #FF6584;
     --gold: #F5C842;
+    --green: #10B981;
     --text: #E2E8F0;
     --muted: #6B7280;
   }
@@ -132,7 +133,8 @@
   }
 
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
-  @media (max-width: 500px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 500px) { .grid-2 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr; } }
 
   label {
     display: block;
@@ -223,6 +225,7 @@
     flex-shrink: 0;
   }
   .toggle.on { background: var(--accent); }
+  .toggle.on.gold-on { background: var(--gold); }
   .toggle::after {
     content: '';
     position: absolute;
@@ -233,22 +236,24 @@
     transition: transform 0.2s;
   }
   .toggle.on::after { transform: translateX(16px); }
-  .toggle-label { font-size: 13px; color: var(--text); }
+  .toggle-label { font-size: 13px; color: var(--text); flex: 1; }
+  .toggle-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  /* ── CHAMPION SECTION ── */
-  .champion-section {
+  /* ── COLLAPSIBLE SECTION ── */
+  .collapse-section {
     overflow: hidden;
     max-height: 0;
     transition: max-height 0.3s ease, opacity 0.3s;
     opacity: 0;
   }
-  .champion-section.open { max-height: 400px; opacity: 1; }
-  .champion-inner { padding-top: 14px; }
+  .collapse-section.open { max-height: 600px; opacity: 1; }
+  .collapse-inner { padding-top: 14px; }
 
   /* ── RADIO ── */
-  .radio-group { display: flex; gap: 8px; margin-bottom: 12px; }
+  .radio-group { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
   .radio-btn {
     flex: 1;
+    min-width: 90px;
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -256,7 +261,7 @@
     cursor: pointer;
     font-size: 11px;
     font-weight: 500;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
     padding: 8px 6px;
     text-align: center;
     transition: all 0.18s;
@@ -266,6 +271,11 @@
     background: rgba(108,99,255,0.15);
     border-color: var(--accent);
     color: var(--accent2);
+  }
+  .radio-btn.active.gold-active {
+    background: rgba(245,200,66,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
   }
 
   /* ── BUTTONS ── */
@@ -408,6 +418,7 @@
     font-size: 12px;
     color: var(--text);
   }
+  .breakdown-val.boost-val { color: var(--green); }
 
   .error-msg {
     color: var(--accent3);
@@ -418,19 +429,69 @@
   .error-msg.show { display: block; }
   .hidden { display: none !important; }
 
-  .yen-symbol {
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 11px;
-    color: var(--gold);
-    margin-right: 4px;
-    opacity: 0.8;
-  }
-
   .note {
     font-size: 11px;
     color: var(--muted);
     line-height: 1.5;
     margin-top: 6px;
+  }
+
+  .weekend-banner {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid var(--green);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12px;
+    color: var(--green);
+    margin-top: 12px;
+    font-weight: 500;
+  }
+  .weekend-banner.show { display: flex; }
+  .weekend-banner::before { content: '🔥'; }
+
+  .trait-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  @media (max-width: 460px) { .trait-grid { grid-template-columns: 1fr; } }
+
+  .trait-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 10px;
+    text-align: left;
+    transition: all 0.18s;
+  }
+  .trait-btn:hover { border-color: var(--accent); }
+  .trait-btn.active {
+    background: rgba(108,99,255,0.15);
+    border-color: var(--accent);
+  }
+  .trait-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+  .trait-btn.active .trait-name { color: var(--accent2); }
+  .trait-desc {
+    font-size: 10.5px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
   }
 </style>
 </head>
@@ -464,9 +525,9 @@
     <div id="dur-options" class="hidden" style="margin-top:14px;">
       <label>Mode Durabilité</label>
       <div class="radio-group">
-        <div class="radio-btn active" data-dur="sword">Sword équipée (30/min)</div>
-        <div class="radio-btn" data-dur="normal">Normal (58/min)</div>
-        <div class="radio-btn" data-dur="auto">Autoclick (60/min)</div>
+        <div class="radio-btn active" data-dur="sword">Sword équipée (28/min)</div>
+        <div class="radio-btn" data-dur="normal">Normal (56/min)</div>
+        <div class="radio-btn" data-dur="auto">Autoclick (58/min)</div>
       </div>
     </div>
 
@@ -499,14 +560,15 @@
     </div>
   </div>
 
+  <!-- CHAMPION -->
   <div class="card">
     <div class="card-title">Champion</div>
     <div class="toggle-row" id="champ-toggle">
       <div class="toggle" id="champ-knob"></div>
       <span class="toggle-label">Champion équipé</span>
     </div>
-    <div class="champion-section" id="champ-section">
-      <div class="champion-inner">
+    <div class="collapse-section" id="champ-section">
+      <div class="collapse-inner">
         <label>Mode de saisie du champion</label>
         <div class="radio-group">
           <div class="radio-btn active" data-mode="pct">Pourcentage (%)</div>
@@ -521,6 +583,111 @@
           <label>Gain par tick du champion</label>
           <input type="text" id="champ-val" placeholder="ex: 250K" />
         </div>
+
+        <div class="section-divider"></div>
+
+        <label style="margin-bottom:10px;">Trait du champion</label>
+        <div class="trait-grid">
+          <div class="trait-btn active" data-trait="none">
+            <div class="trait-name">Aucun</div>
+            <div class="trait-desc">Pas de trait spécial</div>
+          </div>
+          <div class="trait-btn" data-trait="greedy1">
+            <div class="trait-name">Greedy I</div>
+            <div class="trait-desc">+5% de Yens</div>
+          </div>
+          <div class="trait-btn" data-trait="greedy2">
+            <div class="trait-name">Greedy II</div>
+            <div class="trait-desc">+10% de Yens</div>
+          </div>
+          <div class="trait-btn" data-trait="trainer1">
+            <div class="trait-name">Trainer I</div>
+            <div class="trait-desc">+10% training speed</div>
+          </div>
+          <div class="trait-btn" data-trait="trainer2">
+            <div class="trait-name">Trainer II</div>
+            <div class="trait-desc">+15% training speed</div>
+          </div>
+        </div>
+        <div class="note">Trainer affecte la vitesse de training du joueur ET du champion. Greedy n'affecte que les Yens (onglet ¥).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOSTS -->
+  <div class="card">
+    <div class="card-title">Boosts</div>
+
+    <!-- Friend boost -->
+    <label>Amis dans le serveur (x1.03 chacun, cap 5 amis = x1.15)</label>
+    <input type="number" id="friend-count" placeholder="0" min="0" max="5" step="1" value="0" />
+    <div class="note" id="friend-mult-note">Multiplicateur actuel : x1.00</div>
+
+    <div class="section-divider"></div>
+
+    <!-- Server boost -->
+    <div class="toggle-row" id="server-boost-toggle">
+      <div class="toggle" id="server-boost-knob"></div>
+      <span class="toggle-label">Server Boost actif (x1.25)</span>
+    </div>
+    <div class="collapse-section" id="server-boost-section">
+      <div class="collapse-inner">
+        <label>Minutes restantes</label>
+        <input type="number" id="server-boost-minutes" placeholder="ex: 45" min="0" step="1" />
+        <div class="note">Le boost x1.25 ne s'appliquera que sur les minutes restantes indiquées ; au-delà, le calcul repasse en vitesse normale.</div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Weekend x2 -->
+    <div class="toggle-row" id="weekend-toggle">
+      <div class="toggle" id="weekend-knob"></div>
+      <span class="toggle-label">
+        Weekend x2 — Auto (heure réelle Paris)
+        <div class="toggle-sub">Sam 2h → Lun 2h</div>
+      </span>
+    </div>
+    <div class="weekend-banner" id="weekend-banner">Le weekend x2 est actif en ce moment !</div>
+    <div class="collapse-section" id="weekend-manual-section">
+      <div class="collapse-inner">
+        <div class="radio-group">
+          <div class="radio-btn" data-weekendmode="off">Forcer désactivé</div>
+          <div class="radio-btn active" data-weekendmode="auto">Mode auto (recommandé)</div>
+          <div class="radio-btn" data-weekendmode="on">Forcer x2 actif</div>
+        </div>
+        <div class="note">En mode auto, le calcul découpe la progression en segments weekend/hors-weekend pour une estimation précise.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOSTS PERSO TEMPORAIRES -->
+  <div class="card">
+    <div class="card-title">Boosts perso (temporaires)</div>
+
+    <div class="toggle-row" id="statboost-toggle">
+      <div class="toggle" id="statboost-knob"></div>
+      <span class="toggle-label">Stat Boost actif (x1.5 sur les gains)</span>
+    </div>
+    <div class="collapse-section" id="statboost-section">
+      <div class="collapse-inner">
+        <label>Minutes restantes</label>
+        <input type="number" id="statboost-minutes" placeholder="ex: 30" min="0" step="1" />
+        <div class="note">Multiplie les stats gagnées de x1.5 pendant la durée indiquée.</div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="toggle-row" id="speedboost-toggle">
+      <div class="toggle" id="speedboost-knob"></div>
+      <span class="toggle-label">Training Speed Boost actif (+50% ticks/min)</span>
+    </div>
+    <div class="collapse-section" id="speedboost-section">
+      <div class="collapse-inner">
+        <label>Minutes restantes</label>
+        <input type="number" id="speedboost-minutes" placeholder="ex: 30" min="0" step="1" />
+        <div class="note">Accélère la fréquence des ticks (joueur et champion), comme un trait Trainer temporaire.</div>
       </div>
     </div>
   </div>
@@ -553,23 +720,27 @@
     </div>
     <div class="breakdown">
       <div class="breakdown-row">
-        <span class="breakdown-key">Gain joueur / tick</span>
+        <span class="breakdown-key">Gain joueur / tick (base)</span>
         <span class="breakdown-val" id="br-player">—</span>
       </div>
       <div class="breakdown-row" id="br-champ-row">
-        <span class="breakdown-key">Gain champion / tick</span>
+        <span class="breakdown-key">Gain champion / tick (base)</span>
         <span class="breakdown-val" id="br-champ">—</span>
       </div>
       <div class="breakdown-row">
-        <span class="breakdown-key">Ticks / minute</span>
+        <span class="breakdown-key">Ticks / minute (avec Trainer)</span>
         <span class="breakdown-val" id="br-tpm">—</span>
       </div>
       <div class="breakdown-row">
-        <span class="breakdown-key">Gain / minute</span>
+        <span class="breakdown-key">Multiplicateur boosts</span>
+        <span class="breakdown-val boost-val" id="br-mult">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / minute (effectif)</span>
         <span class="breakdown-val" id="br-gpm">—</span>
       </div>
       <div class="breakdown-row">
-        <span class="breakdown-key">Gain / heure</span>
+        <span class="breakdown-key">Gain / heure (effectif)</span>
         <span class="breakdown-val" id="br-gph">—</span>
       </div>
     </div>
@@ -584,7 +755,7 @@
   <div class="card">
     <div class="card-title gold">Revenus</div>
     <div>
-      <label>¥ Yens par minute</label>
+      <label>¥ Yens par minute (base)</label>
       <input type="text" id="yen-rate" placeholder="ex: 500K ou 2.5B" class="input-gold" />
       <div class="error-msg" id="err-yen-rate">Valeur invalide</div>
     </div>
@@ -602,6 +773,37 @@
         <label>Yens visés</label>
         <input type="text" id="yen-target" placeholder="ex: 1T" class="input-gold" />
         <div class="error-msg" id="err-yen-target">Valeur invalide</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title gold">Champion</div>
+    <div class="toggle-row" id="yen-champ-toggle">
+      <div class="toggle gold-on" id="yen-champ-knob"></div>
+      <span class="toggle-label">Champion avec trait Greedy</span>
+    </div>
+    <div class="collapse-section" id="yen-champ-section">
+      <div class="collapse-inner">
+        <div class="radio-group">
+          <div class="radio-btn gold-active" data-greedy="greedy1">Greedy I (+5%)</div>
+          <div class="radio-btn gold-active" data-greedy="greedy2">Greedy II (+10%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title gold">Yens Boost (temporaire)</div>
+    <div class="toggle-row" id="yenboost-toggle">
+      <div class="toggle gold-on" id="yenboost-knob"></div>
+      <span class="toggle-label">Yens Boost actif (+50% gains de Yens)</span>
+    </div>
+    <div class="collapse-section" id="yenboost-section">
+      <div class="collapse-inner">
+        <label>Minutes restantes</label>
+        <input type="number" id="yenboost-minutes" placeholder="ex: 30" min="0" step="1" class="input-gold" />
+        <div class="note">Multiplie les gains de Yens de x1.5 pendant la durée indiquée, puis revient au taux normal.</div>
       </div>
     </div>
   </div>
@@ -633,13 +835,21 @@
       </div>
       <div class="stat-box">
         <div class="stat-box-value gold-color" id="yen-res-rate">—</div>
-        <div class="stat-box-label">¥ par minute</div>
+        <div class="stat-box-label">¥ par minute (effectif)</div>
       </div>
     </div>
 
     <div class="breakdown">
       <div class="breakdown-row">
-        <span class="breakdown-key">Gain / minute</span>
+        <span class="breakdown-key">Taux de base</span>
+        <span class="breakdown-val" id="yen-br-base">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Bonus Greedy</span>
+        <span class="breakdown-val boost-val" id="yen-br-greedy">—</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-key">Gain / minute (effectif)</span>
         <span class="breakdown-val" id="yen-br-min">—</span>
       </div>
       <div class="breakdown-row">
@@ -723,23 +933,86 @@ tabBtns.forEach(btn => {
   });
 });
 
+// ── WEEKEND x2 — REAL TIME (Europe/Paris) ──────────────────────
+// Returns the Paris-local Date object equivalent for a given UTC instant
+function getParisParts(date) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false, weekday: 'short'
+  }).formatToParts(date);
+  const o = {};
+  parts.forEach(p => o[p.type] = p.value);
+  return o;
+}
+
+// Determine if a given JS Date (absolute instant) falls within weekend x2 window
+// Window: Saturday 02:00 Paris -> Monday 02:00 Paris
+function isWeekendBoostActive(date) {
+  const p = getParisParts(date);
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const wd = weekdayMap[p.weekday];
+  const hour = parseInt(p.hour, 10);
+
+  if (wd === 6 && hour >= 2) return true;      // Saturday from 2h
+  if (wd === 0) return true;                    // All Sunday
+  if (wd === 1 && hour < 2) return true;        // Monday before 2h
+  return false;
+}
+
+// Find the next transition point (in ms from `date`) where weekend status flips
+function nextTransitionMs(date) {
+  // step forward minute by minute until status flips (safe enough, max ~2880 steps)
+  const startStatus = isWeekendBoostActive(date);
+  let t = new Date(date.getTime());
+  for (let i = 0; i < 4000; i++) {
+    t = new Date(t.getTime() + 60000); // +1 min
+    if (isWeekendBoostActive(t) !== startStatus) {
+      return t.getTime() - date.getTime();
+    }
+  }
+  return 4000 * 60000; // fallback safety
+}
+
+function updateWeekendBanner() {
+  const active = isWeekendBoostActive(new Date());
+  document.getElementById('weekend-banner').classList.toggle('show', active);
+}
+updateWeekendBanner();
+setInterval(updateWeekendBanner, 30000);
+
 // ── STATS STATE ───────────────────────────────────────────────
 let currentStat = 'STR';
 let durMode = 'sword';
 let autoclickOn = false;
 let champOn = false;
 let champMode = 'pct';
+let champTrait = 'none';
+let weekendMode = 'auto'; // 'off' | 'auto' | 'on'
+let weekendEnabled = true; // master toggle
 
-function getTPM() {
-  if (currentStat === 'STR')   return autoclickOn ? 60 : 55;
-  if (currentStat === 'CHA')   return 60;
+function getBaseTPM() {
+  if (currentStat === 'STR')   return autoclickOn ? 61 : 56;
+  if (currentStat === 'CHA')   return 56;
   if (currentStat === 'DUR') {
-    if (durMode === 'sword') return 30;
-    if (durMode === 'auto')  return 60;
-    return 58;
+    if (durMode === 'sword') return 28;
+    if (durMode === 'auto')  return 58;
+    return 56;
   }
-  if (currentStat === 'SWORD') return autoclickOn ? 75 : 70;
-  return 60;
+  if (currentStat === 'SWORD') return autoclickOn ? 61 : 56;
+  return 56;
+}
+
+function getTrainerMult() {
+  if (champOn && champTrait === 'trainer1') return 1.10;
+  if (champOn && champTrait === 'trainer2') return 1.15;
+  return 1.0;
+}
+
+function getFriendMult() {
+  const n = Math.min(5, Math.max(0, parseInt(document.getElementById('friend-count').value, 10) || 0));
+  return Math.min(1.15, Math.pow(1.03, n));
 }
 
 document.querySelectorAll('.stat-btn').forEach(btn => {
@@ -781,6 +1054,56 @@ document.querySelectorAll('[data-mode]').forEach(btn => {
   });
 });
 
+document.querySelectorAll('[data-trait]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-trait]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    champTrait = btn.dataset.trait;
+  });
+});
+
+document.getElementById('friend-count').addEventListener('input', () => {
+  const mult = getFriendMult();
+  document.getElementById('friend-mult-note').textContent = `Multiplicateur actuel : x${mult.toFixed(2)}`;
+});
+
+let serverBoostOn = false;
+document.getElementById('server-boost-toggle').addEventListener('click', () => {
+  serverBoostOn = !serverBoostOn;
+  document.getElementById('server-boost-knob').classList.toggle('on', serverBoostOn);
+  document.getElementById('server-boost-section').classList.toggle('open', serverBoostOn);
+});
+
+document.getElementById('weekend-toggle').addEventListener('click', () => {
+  weekendEnabled = !weekendEnabled;
+  document.getElementById('weekend-knob').classList.toggle('on', weekendEnabled);
+  document.getElementById('weekend-manual-section').classList.toggle('open', weekendEnabled);
+});
+
+document.querySelectorAll('[data-weekendmode]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-weekendmode]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    weekendMode = btn.dataset.weekendmode;
+  });
+});
+
+// Personal temporary boosts (Stats tab)
+let statBoostOn = false;
+let speedBoostOn = false;
+
+document.getElementById('statboost-toggle').addEventListener('click', () => {
+  statBoostOn = !statBoostOn;
+  document.getElementById('statboost-knob').classList.toggle('on', statBoostOn);
+  document.getElementById('statboost-section').classList.toggle('open', statBoostOn);
+});
+
+document.getElementById('speedboost-toggle').addEventListener('click', () => {
+  speedBoostOn = !speedBoostOn;
+  document.getElementById('speedboost-knob').classList.toggle('on', speedBoostOn);
+  document.getElementById('speedboost-section').classList.toggle('open', speedBoostOn);
+});
+
 // ── STATS CALCULATE ───────────────────────────────────────────
 function vld(id, errId) {
   const v = parseVal(document.getElementById(id).value);
@@ -796,16 +1119,16 @@ document.getElementById('calc-btn').addEventListener('click', () => {
 
   if (target <= current) {
     const el = document.getElementById('err-target');
-    el.textContent = 'L\'objectif doit dépasser la valeur actuelle.';
+    el.textContent = "L'objectif doit dépasser la valeur actuelle.";
     el.classList.add('show');
     return;
   }
   document.getElementById('err-target').classList.remove('show');
 
-  const tpm = getTPM();
-  const champTPM = 12;
-  let champPerTick = 0;
+  const baseTpm = getBaseTPM();
+  const trainerMult = getTrainerMult(); // from champion Trainer trait, permanent
 
+  let champPerTick = 0;
   if (champOn) {
     if (champMode === 'pct') {
       const pct = parseFloat(document.getElementById('champ-pct').value);
@@ -818,24 +1141,104 @@ document.getElementById('calc-btn').addEventListener('click', () => {
     }
   }
 
-  const playerGPM = tickGain * tpm;
-  const champGPM  = champOn ? champPerTick * champTPM : 0;
-  const totalGPM  = playerGPM + champGPM;
-  const remaining = target - current;
-  const mins      = remaining / totalGPM;
-  const gain24h   = totalGPM * 1440;
+  const friendMult = getFriendMult();
+  const serverMinutesLeft = serverBoostOn ? (parseFloat(document.getElementById('server-boost-minutes').value) || 0) : 0;
+  const statBoostMinutesLeft = statBoostOn ? (parseFloat(document.getElementById('statboost-minutes').value) || 0) : 0;
+  const speedBoostMinutesLeft = speedBoostOn ? (parseFloat(document.getElementById('speedboost-minutes').value) || 0) : 0;
+
+  const remaining0 = target - current;
+
+  // gpm at a given instant, given which temporary boosts are still active
+  function gpmAt(serverActive, weekendActive, statActive, speedActive) {
+    const speedMult = trainerMult * (speedActive ? 1.5 : 1.0); // affects ticks/min, player AND champion
+    const tpmNow = baseTpm * speedMult;
+    const champTpmNow = 12 * speedMult;
+    const base = (tickGain * tpmNow) + (champOn ? champPerTick * champTpmNow : 0);
+    const gainMult = friendMult * (serverActive ? 1.25 : 1.0) * (weekendActive ? 2 : 1) * (statActive ? 1.5 : 1.0);
+    return base * gainMult;
+  }
+
+  let totalMinutes = 0;
+  let remaining = remaining0;
+  let elapsedSimMs = 0;
+  const now = new Date();
+  let weekendActiveNow = weekendEnabled && weekendMode === 'auto'
+      ? isWeekendBoostActive(now)
+      : (weekendEnabled && weekendMode === 'on');
+  if (!weekendEnabled) weekendActiveNow = false;
+
+  let serverMinutesRemaining = serverMinutesLeft;
+  let statMinutesRemaining = statBoostMinutesLeft;
+  let speedMinutesRemaining = speedBoostMinutesLeft;
+  let safetyIterations = 0;
+
+  while (remaining > 0 && safetyIterations < 20000) {
+    safetyIterations++;
+
+    const serverActiveNow = serverBoostOn && serverMinutesRemaining > 0;
+    const statActiveNow = statBoostOn && statMinutesRemaining > 0;
+    const speedActiveNow = speedBoostOn && speedMinutesRemaining > 0;
+
+    const gpm = gpmAt(serverActiveNow, weekendActiveNow, statActiveNow, speedActiveNow);
+    if (gpm <= 0) { totalMinutes = Infinity; break; }
+
+    let segmentCap = Infinity;
+    if (serverActiveNow) segmentCap = Math.min(segmentCap, serverMinutesRemaining);
+    if (statActiveNow) segmentCap = Math.min(segmentCap, statMinutesRemaining);
+    if (speedActiveNow) segmentCap = Math.min(segmentCap, speedMinutesRemaining);
+
+    if (weekendEnabled && weekendMode === 'auto') {
+      const simNow = new Date(now.getTime() + elapsedSimMs);
+      const msToFlip = nextTransitionMs(simNow);
+      const minsToFlip = msToFlip / 60000;
+      segmentCap = Math.min(segmentCap, minsToFlip);
+    }
+
+    const minsToFinish = remaining / gpm;
+    const segmentMinutes = Math.min(segmentCap, minsToFinish);
+
+    remaining -= gpm * segmentMinutes;
+    totalMinutes += segmentMinutes;
+    elapsedSimMs += segmentMinutes * 60000;
+
+    if (serverActiveNow) serverMinutesRemaining -= segmentMinutes;
+    if (statActiveNow) statMinutesRemaining -= segmentMinutes;
+    if (speedActiveNow) speedMinutesRemaining -= segmentMinutes;
+
+    if (weekendEnabled && weekendMode === 'auto') {
+      const simNow2 = new Date(now.getTime() + elapsedSimMs);
+      weekendActiveNow = isWeekendBoostActive(simNow2);
+    }
+
+    if (remaining <= 0.0000001) break;
+  }
+
+  const mins = totalMinutes;
+
+  const serverActiveDisplay = serverBoostOn && serverMinutesLeft > 0;
+  const statActiveDisplay = statBoostOn && statBoostMinutesLeft > 0;
+  const speedActiveDisplay = speedBoostOn && speedBoostMinutesLeft > 0;
+
+  const speedMultNow = trainerMult * (speedActiveDisplay ? 1.5 : 1.0);
+  const tpmDisplay = baseTpm * speedMultNow;
+  const champTpmDisplay = 12 * speedMultNow;
+  const baseGPMDisplay = (tickGain * tpmDisplay) + (champOn ? champPerTick * champTpmDisplay : 0);
+  const effectiveMultNow = friendMult * (serverActiveDisplay ? 1.25 : 1) * (weekendActiveNow ? 2 : 1) * (statActiveDisplay ? 1.5 : 1);
+  const totalGPMNow = baseGPMDisplay * effectiveMultNow;
 
   document.getElementById('res-time').textContent      = formatTime(mins);
-  document.getElementById('res-24h').textContent       = formatVal(gain24h);
-  document.getElementById('res-tpm').textContent       = tpm + (champOn ? ` + ${champTPM}` : '');
+  document.getElementById('res-24h').textContent       = formatVal(totalGPMNow * 1440);
+  document.getElementById('res-tpm').textContent       = (Math.round(tpmDisplay*100)/100) + (champOn ? ` + ${(Math.round(champTpmDisplay*100)/100)}` : '');
   document.getElementById('res-per-tick').textContent  = formatVal(tickGain + champPerTick);
-  document.getElementById('res-remaining').textContent = formatVal(remaining);
+  document.getElementById('res-remaining').textContent = formatVal(remaining0);
   document.getElementById('br-player').textContent     = formatVal(tickGain);
   document.getElementById('br-champ').textContent      = champOn ? formatVal(champPerTick) : '—';
   document.getElementById('br-champ-row').style.opacity = champOn ? '1' : '0.3';
-  document.getElementById('br-tpm').textContent        = tpm + (champOn ? ` + ${champTPM}` : '');
-  document.getElementById('br-gpm').textContent        = formatVal(totalGPM) + '/min';
-  document.getElementById('br-gph').textContent        = formatVal(totalGPM * 60) + '/h';
+  document.getElementById('br-tpm').textContent        = (Math.round(tpmDisplay*100)/100) + (champOn ? ` + ${(Math.round(champTpmDisplay*100)/100)}` : '');
+  document.getElementById('br-mult').textContent        = 'x' + effectiveMultNow.toFixed(3) +
+    ` (amis x${friendMult.toFixed(2)}${serverActiveDisplay ? ' · server x1.25' : ''}${weekendActiveNow ? ' · weekend x2' : ''}${statActiveDisplay ? ' · stat boost x1.5' : ''})`;
+  document.getElementById('br-gpm').textContent        = formatVal(totalGPMNow) + '/min';
+  document.getElementById('br-gph').textContent        = formatVal(totalGPMNow * 60) + '/h';
 
   const res = document.getElementById('results');
   res.classList.add('show');
@@ -844,6 +1247,33 @@ document.getElementById('calc-btn').addEventListener('click', () => {
       Math.min(100, (current / target) * 100) + '%';
   }, 100);
   res.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
+
+// ── YENS CHAMPION GREEDY UI ─────────────────────────────────────
+let yenChampOn = false;
+let yenGreedy = 'greedy1';
+
+document.getElementById('yen-champ-toggle').addEventListener('click', () => {
+  yenChampOn = !yenChampOn;
+  document.getElementById('yen-champ-knob').classList.toggle('on', yenChampOn);
+  document.getElementById('yen-champ-section').classList.toggle('open', yenChampOn);
+});
+
+document.querySelectorAll('[data-greedy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-greedy]').forEach(b => b.classList.remove('active','gold-active'));
+    btn.classList.add('active', 'gold-active');
+    yenGreedy = btn.dataset.greedy;
+  });
+});
+// init default active state visually
+document.querySelector('[data-greedy="greedy1"]').classList.add('active','gold-active');
+
+let yenBoostOn = false;
+document.getElementById('yenboost-toggle').addEventListener('click', () => {
+  yenBoostOn = !yenBoostOn;
+  document.getElementById('yenboost-knob').classList.toggle('on', yenBoostOn);
+  document.getElementById('yenboost-section').classList.toggle('open', yenBoostOn);
 });
 
 // ── YENS CALCULATE ────────────────────────────────────────────
@@ -859,27 +1289,65 @@ document.getElementById('yen-calc-btn').addEventListener('click', () => {
 
   if (target <= current) {
     const el = document.getElementById('err-yen-target');
-    el.textContent = 'L\'objectif doit dépasser les Yens actuels.';
+    el.textContent = "L'objectif doit dépasser les Yens actuels.";
     el.classList.add('show');
     return;
   }
   document.getElementById('err-yen-target').classList.remove('show');
 
-  const remaining  = target - current;
-  const minsNeeded = remaining / rate;
-  const perHour    = rate * 60;
-  const perDay     = rate * 1440;
+  const greedyMult = yenChampOn ? (yenGreedy === 'greedy2' ? 1.10 : 1.05) : 1.0;
+  const yenBoostMinutesLeft = yenBoostOn ? (parseFloat(document.getElementById('yenboost-minutes').value) || 0) : 0;
+
+  const remaining0 = target - current;
+
+  function yenGpmAt(boostActive) {
+    return rate * greedyMult * (boostActive ? 1.5 : 1.0);
+  }
+
+  let totalMinutes = 0;
+  let remaining = remaining0;
+  let boostMinutesRemaining = yenBoostMinutesLeft;
+  let safetyIterations = 0;
+
+  while (remaining > 0 && safetyIterations < 20000) {
+    safetyIterations++;
+    const boostActiveNow = yenBoostOn && boostMinutesRemaining > 0;
+    const gpm = yenGpmAt(boostActiveNow);
+    if (gpm <= 0) { totalMinutes = Infinity; break; }
+
+    let segmentCap = Infinity;
+    if (boostActiveNow) segmentCap = Math.min(segmentCap, boostMinutesRemaining);
+
+    const minsToFinish = remaining / gpm;
+    const segmentMinutes = Math.min(segmentCap, minsToFinish);
+
+    remaining -= gpm * segmentMinutes;
+    totalMinutes += segmentMinutes;
+    if (boostActiveNow) boostMinutesRemaining -= segmentMinutes;
+
+    if (remaining <= 0.0000001) break;
+  }
+
+  const minsNeeded = totalMinutes;
+  const boostActiveDisplay = yenBoostOn && yenBoostMinutesLeft > 0;
+  const effectiveRate = yenGpmAt(boostActiveDisplay);
+  const perHour    = effectiveRate * 60;
+  const perDay     = effectiveRate * 1440;
 
   document.getElementById('yen-res-time').textContent      = formatTime(minsNeeded);
   document.getElementById('yen-res-hour').textContent      = '¥ ' + formatVal(perHour);
   document.getElementById('yen-res-day').textContent       = '¥ ' + formatVal(perDay);
-  document.getElementById('yen-res-remaining').textContent = '¥ ' + formatVal(remaining);
-  document.getElementById('yen-res-rate').textContent      = '¥ ' + formatVal(rate);
+  document.getElementById('yen-res-remaining').textContent = '¥ ' + formatVal(remaining0);
+  document.getElementById('yen-res-rate').textContent      = '¥ ' + formatVal(effectiveRate);
 
-  document.getElementById('yen-br-min').textContent       = '¥ ' + formatVal(rate) + '/min';
+  document.getElementById('yen-br-base').textContent     = '¥ ' + formatVal(rate) + '/min';
+  document.getElementById('yen-br-greedy').textContent   = (yenChampOn || boostActiveDisplay)
+    ? `x${(greedyMult * (boostActiveDisplay ? 1.5 : 1)).toFixed(3)}${yenChampOn ? ' (greedy)' : ''}${boostActiveDisplay ? ' (yens boost x1.5)' : ''}`
+    : '—';
+  document.getElementById('yen-br-min').textContent       = '¥ ' + formatVal(effectiveRate) + '/min';
   document.getElementById('yen-br-hour').textContent      = '¥ ' + formatVal(perHour) + '/h';
   document.getElementById('yen-br-day').textContent       = '¥ ' + formatVal(perDay) + '/j';
-  document.getElementById('yen-br-remaining').textContent = '¥ ' + formatVal(remaining);
+  document.getElementById('yen-br-remaining').textContent = '¥ ' + formatVal(remaining0);
   document.getElementById('yen-br-minutes').textContent   = Math.ceil(minsNeeded).toLocaleString('fr-FR') + ' min';
 
   const res = document.getElementById('yen-results');
