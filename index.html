@@ -374,18 +374,34 @@
 <div class="tab-panel active" id="panel-stats">
 
   <div class="card">
-    <div class="card-title">Statistique</div>
+    <div class="card-title">Statistique & tick de base</div>
     <div class="stat-selector">
       <div class="stat-btn active" data-stat="STR">STR</div>
       <div class="stat-btn" data-stat="CHA">CHA</div>
       <div class="stat-btn" data-stat="DUR">DUR</div>
       <div class="stat-btn" data-stat="SWORD">SWORD</div>
     </div>
+
+    <div id="dur-options" class="hidden" style="margin-top:14px;">
+      <label>Mode Durabilité</label>
+      <div class="radio-group">
+        <div class="radio-btn active" data-dur="sword">Sword équipée (28/min)</div>
+        <div class="radio-btn" data-dur="normal">Normal (56/min)</div>
+        <div class="radio-btn" data-dur="auto">Autoclick (58/min)</div>
+      </div>
+    </div>
+
+    <div id="autoclick-option" style="margin-top:14px;">
+      <div class="toggle-row" id="autoclick-toggle">
+        <div class="toggle" id="autoclick-knob"></div>
+        <span class="toggle-label">Autoclick activé</span>
+      </div>
+    </div>
   </div>
 
   <div class="card">
     <div class="card-title">Valeurs actuelles</div>
-    <div class="note" style="margin-bottom:12px;">Entre les valeurs telles qu'affichées en jeu MAINTENANT (boosts déjà inclus si tu en as actifs).</div>
+    <div class="note" style="margin-bottom:12px;">Entre les valeurs telles qu'affichées en jeu MAINTENANT (boosts de gain déjà inclus si tu en as actifs — le tick/min lui est calculé automatiquement à partir de ta sélection ci-dessus + Training Speed Boost + trait Trainer).</div>
     <div class="grid-2">
       <div>
         <label>Valeur actuelle</label>
@@ -399,15 +415,9 @@
       </div>
     </div>
     <div style="margin-top:13px;">
-      <label>Gain par tick actuel (joueur, boosts inclus)</label>
+      <label>Gain par tick actuel (joueur, boosts de gain inclus)</label>
       <input type="text" id="tick-gain" placeholder="ex: 500K ou 1.2B" />
       <div class="error-msg" id="err-tick">Valeur invalide</div>
-    </div>
-    <div style="margin-top:13px;">
-      <label>Ticks par minute actuels (boosts inclus)</label>
-      <input type="number" id="tpm-current" placeholder="ex: 56" min="1" step="0.1" />
-      <div class="note">Inclut autoclick, trait Trainer, Training Speed Boost — bref, ce que tu vois actuellement en jeu.</div>
-      <div class="error-msg" id="err-tpm">Valeur invalide</div>
     </div>
   </div>
 
@@ -419,12 +429,12 @@
     </div>
     <div class="collapse-section" id="champ-section">
       <div class="collapse-inner">
-        <label>Gain par tick actuel du champion (boosts inclus)</label>
+        <label>Gain par tick actuel du champion (boosts de gain inclus)</label>
         <input type="text" id="champ-val" placeholder="ex: 250K" />
         <div class="note">Si tu connais juste son %, multiplie-le par ton propre gain par tick pour obtenir cette valeur.</div>
         <div style="margin-top:13px;">
-          <label>Ticks par minute du champion (boosts inclus)</label>
-          <input type="number" id="champ-tpm" placeholder="ex: 12" min="0" step="0.1" />
+          <label>Tick de base du champion (ticks/min, sans boost)</label>
+          <input type="number" id="champ-tpm-base" placeholder="ex: 12" min="0" step="0.1" value="12" />
         </div>
       </div>
     </div>
@@ -760,12 +770,44 @@ bindCheckbox('yenboost', true);
 bindCheckbox('greedy1', true, (on) => { if (on) { boostState.greedy2 = false; const c2 = document.querySelector('[data-chk="greedy2"]'); c2.classList.remove('checked','gold-chk'); } });
 bindCheckbox('greedy2', true, (on) => { if (on) { boostState.greedy1 = false; const c1 = document.querySelector('[data-chk="greedy1"]'); c1.classList.remove('checked','gold-chk'); } });
 
-// ── STAT SELECTOR (cosmetic only now, doesn't change tick math since user enters live values) ──
+// ── STAT SELECTOR + BASE TICK LOGIC ───────────────────────────
+let currentStat = 'STR';
+let durMode = 'sword';
+let autoclickOn = false;
+
+function getBaseTPM() {
+  if (currentStat === 'STR')   return autoclickOn ? 61 : 56;
+  if (currentStat === 'CHA')   return 56;
+  if (currentStat === 'DUR') {
+    if (durMode === 'sword') return 28;
+    if (durMode === 'auto')  return 58;
+    return 56;
+  }
+  if (currentStat === 'SWORD') return autoclickOn ? 61 : 56;
+  return 56;
+}
+
 document.querySelectorAll('.stat-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.stat-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    currentStat = btn.dataset.stat;
+    document.getElementById('dur-options').classList.toggle('hidden', currentStat !== 'DUR');
+    document.getElementById('autoclick-option').classList.toggle('hidden', currentStat === 'CHA' || currentStat === 'DUR');
   });
+});
+
+document.querySelectorAll('[data-dur]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-dur]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    durMode = btn.dataset.dur;
+  });
+});
+
+document.getElementById('autoclick-toggle').addEventListener('click', () => {
+  autoclickOn = !autoclickOn;
+  document.getElementById('autoclick-knob').classList.toggle('on', autoclickOn);
 });
 
 // ── CORE SEGMENTED "PEEL OFF BOOSTS" CALCULATION ──────────────────────
@@ -861,11 +903,8 @@ document.getElementById('calc-btn').addEventListener('click', () => {
   const current  = vld('current-val', 'err-current');
   const target   = vld('target-val', 'err-target');
   const tickGain = vld('tick-gain', 'err-tick');
-  const tpmEl = document.getElementById('tpm-current');
-  const tpm = parseFloat(tpmEl.value);
-  document.getElementById('err-tpm').classList.toggle('show', isNaN(tpm) || tpm <= 0);
 
-  if (current === null || target === null || tickGain === null || isNaN(tpm) || tpm <= 0) return;
+  if (current === null || target === null || tickGain === null) return;
 
   if (target <= current) {
     const el = document.getElementById('err-target');
@@ -875,15 +914,29 @@ document.getElementById('calc-btn').addEventListener('click', () => {
   }
   document.getElementById('err-target').classList.remove('show');
 
-  let champPerTick = 0, champTpm = 0;
+  let champPerTick = 0, champTpmBase = 0;
   if (champOn) {
     const cv = parseVal(document.getElementById('champ-val').value);
-    const ct = parseFloat(document.getElementById('champ-tpm').value);
+    const ct = parseFloat(document.getElementById('champ-tpm-base').value);
     if (cv !== null) champPerTick = cv;
-    if (!isNaN(ct)) champTpm = ct;
+    if (!isNaN(ct)) champTpmBase = ct;
   }
 
-  const currentRate = (tickGain * tpm) + (champOn ? champPerTick * champTpm : 0);
+  // Trainer trait: permanent multiplier on ticks/min, affects player AND champion
+  const trainerMult = boostState.trainer1 ? 1.10 : (boostState.trainer2 ? 1.15 : 1.0);
+
+  // Training Speed Boost: temporary +50% on ticks/min, affects player AND champion.
+  // Since it's temporary, we fold it into currentRate now, and register it as a
+  // peel-off boost so it gets divided back out when it expires.
+  const speedBoostMins = boostState.speed ? (parseFloat(document.getElementById('time-speed').value) || 0) : 0;
+  const speedBoostActiveNow = speedBoostMins > 0;
+  const speedMultNow = speedBoostActiveNow ? 1.5 : 1.0;
+
+  const baseTpm = getBaseTPM();
+  const tpmNow = baseTpm * trainerMult * speedMultNow;
+  const champTpmNow = champTpmBase * trainerMult * speedMultNow;
+
+  const currentRate = (tickGain * tpmNow) + (champOn ? champPerTick * champTpmNow : 0);
   const remaining0 = target - current;
 
   // Build list of temporary boosts that are checked & have minutes
